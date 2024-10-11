@@ -1,38 +1,19 @@
-﻿using System;
+﻿using AventStack.ExtentReports;
+using AventStack.ExtentReports.Reporter;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Support.UI;
-using SeleniumExtras.WaitHelpers;
-using AventStack.ExtentReports;
-using AventStack.ExtentReports.Reporter;
-using AventStack.ExtentReports.Model;
 
 public class ExtentReport
 {
     public static void Main()
     {
-        // Initialize WebDriver
-        IWebDriver driver = new ChromeDriver();
+        // Create report directories
+        CreateReportDirectories();
 
-        // Initialize ExtentReports and attach the reporter
+        // Initialize WebDriver and ExtentReports
+        using IWebDriver driver = new ChromeDriver();
         ExtentReports extent = new ExtentReports();
-
-        try
-        {
-            if (!Directory.Exists(@"D:\ReportResults\Report"))
-            {
-                Directory.CreateDirectory(@"D:\ReportResults\Report");
-            }
-
-            if (!Directory.Exists(@"D:\ReportResults\Screenshots"))
-            {
-                Directory.CreateDirectory(@"D:\ReportResults\Screenshots");
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine($"The process failed: {e.StackTrace}");
-        }
 
         ExtentSparkReporter htmlreporter = new ExtentSparkReporter(@"D:\ReportResults\Report" + DateTime.Now.ToString("_MMddyyyy_hhmmtt") + ".html");
         extent.AttachReporter(htmlreporter);
@@ -51,7 +32,7 @@ public class ExtentReport
             driver.FindElement(By.Id("username")).SendKeys("student");
             test.Log(Status.Info, "Entered username");
 
-            driver.FindElement(By.Id("password")).SendKeys("Password1234");
+            driver.FindElement(By.Id("password")).SendKeys("Password123");
             test.Log(Status.Info, "Entered password");
 
             driver.FindElement(By.Id("submit")).Click();
@@ -67,23 +48,34 @@ public class ExtentReport
         catch (Exception ex)
         {
             // Log the failure with exception
-            test.Log(Status.Fail, "Login Test Failed: " + ex.Message);
-
+            test.Log(Status.Fail, "Login Test Failed: " + ex.Message + Environment.NewLine + ex.StackTrace);
 
             // Capture a screenshot on failure
             var screenshot = ((ITakesScreenshot)driver).GetScreenshot();
             string screenshotPath = @"D:\ReportResults\Screenshots\Screenshot" + DateTime.Now.ToString("_MMddyyyy_hhmmtt") + ".png";
             screenshot.SaveAsFile(screenshotPath);
             test.AddScreenCaptureFromPath(screenshotPath);
-
         }
         finally
         {
-            // Quit the driver
-            driver.Quit();
-
             // Flush the report
             extent.Flush();
+        }
+    }
+
+    private static void CreateReportDirectories()
+    {
+        string reportPath = @"D:\ReportResults\Report";
+        string screenshotPath = @"D:\ReportResults\Screenshots";
+
+        if (!Directory.Exists(reportPath))
+        {
+            Directory.CreateDirectory(reportPath);
+        }
+
+        if (!Directory.Exists(screenshotPath))
+        {
+            Directory.CreateDirectory(screenshotPath);
         }
     }
 }
